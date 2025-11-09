@@ -1,0 +1,17 @@
+# Go
+/tmp/
+bin/
+*.out
+coverage.*
+
+# Air
+tmp/
+
+# Docker / local
+.env
+*.local.*
+.DS_Store
+
+# Grafana and Prometheus data
+grafana_data/
+prom_data/

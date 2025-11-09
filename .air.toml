@@ -1,0 +1,22 @@
+# .air.toml
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# Budujemy binarkę z ./cmd/gomon do ./tmp/gomon
+cmd = "go build -trimpath -o ./tmp/gomon ."
+bin = "./tmp/gomon"
+# Pliki i katalogi do obserwacji/ignorowania
+include_ext = ["go", "tpl", "tmpl", "html"]
+exclude_dir = ["vendor", "tmp", "dist", ".git"]
+
+# Opóźnienia i sygnały
+delay = 100
+kill_delay = 0
+
+[log]
+time = true
+
+[env]
+# Twoja app nasłuchuje na :8080
+PORT = "8080"

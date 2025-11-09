@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  gomon:
+    build:
+      context: .
+      target: dev
+    command: ["air", "-c", ".air.toml"]
+    volumes:
+      - .:/app
+    container_name: gomon
+    environment:
+      # OTel Metrics → Collector (gRPC)
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=gomon,service.namespace=playground,env=dev
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+    ports:
+      - "8888:8080"        # HTTP (app service)
+    depends_on:
+      - otel-collector
+    networks: [mon]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.139.0
+    container_name: otel-collector
+    command: ["--config=/etc/otelcol/otel-collector.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/otel-collector.yaml:ro
+    ports:
+      - "4317:4317"        # OTLP gRPC (from app)
+      - "9464:9464"        # Prometheus /metrics
+    networks: [mon]
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    container_name: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+    networks: [mon]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3030:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # automatyczne podpięcie Prometheusa jako datasource:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      # (opcjonalnie) dashboardy (*.json):
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+    networks: [mon]
+
+volumes:
+  prom_data:
+  grafana_data:
+
+networks:
+  mon:
+    driver: bridge
