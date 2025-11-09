@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 
 [build]
 # Budujemy binarkę z ./cmd/gomon do ./tmp/gomon
-cmd = "go build -trimpath -o ./tmp/gomon ."
+cmd = "go build -trimpath -o ./tmp/gomon ./cmd"
 bin = "./tmp/gomon"
 # Pliki i katalogi do obserwacji/ignorowania
 include_ext = ["go", "tpl", "tmpl", "html"]
