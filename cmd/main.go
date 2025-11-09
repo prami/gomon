@@ -9,31 +9,15 @@ import (
 	"os/signal"
 	"sync"
 	"time"
+
+	httpsrv "github.com/prami/gomon/internal/server/http"
 )
-
-func NewServer(ctx context.Context) http.Handler {
-	mux := http.NewServeMux()
-	addRoutes(mux)
-
-	return mux
-}
-
-func addRoutes(mux *http.ServeMux) {
-	mux.Handle("/", handleRoot())
-}
-
-func handleRoot() http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, "hello 👋👋👋")
-		})
-}
 
 func run(ctx context.Context) error {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
-	srv := NewServer(ctx)
+	srv := httpsrv.NewServer(ctx)
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", "8080"),
 		Handler: srv,
