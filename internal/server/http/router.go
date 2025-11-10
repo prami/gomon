@@ -1,7 +1,14 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
 
-func addRoutes(mux *http.ServeMux) {
-	mux.Handle("/", handleRoot())
+	"go.opentelemetry.io/otel/metric"
+)
+
+func addRoutes(
+	mux *http.ServeMux,
+	meter metric.Meter,
+) {
+	mux.Handle("/", handleIndex(meter))
 }
