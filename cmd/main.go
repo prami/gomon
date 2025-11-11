@@ -11,6 +11,7 @@ import (
 	"time"
 
 	httpsrv "github.com/prami/gomon/internal/server/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	otelruntime "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -48,9 +49,15 @@ func run(ctx context.Context) error {
 		ctx,
 		mp.Meter("gomon/http"),
 	)
+
+	// Use standard Otel handler
+	wrapped := otelhttp.NewHandler(srv, "http.server",
+		otelhttp.WithMeterProvider(mp),
+	)
+
 	httpServer := &http.Server{
 		Addr:    net.JoinHostPort("0.0.0.0", "8080"),
-		Handler: srv,
+		Handler: wrapped,
 	}
 
 	// Run the server in a goroutine so that it can be gracefully shut down
